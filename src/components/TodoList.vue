@@ -7,7 +7,7 @@
         <div v-for="(todo, index) in todos" :key="todo.id" class="todo-item">
             <div class="todo-item-left">
                 <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label">{{ todo.title }}</div>
-                <input v-else class="todo-item-edit" type="text" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" placeholder="Enter something" autofocus />
+                <input v-else type="text" class="todo-item-edit" placeholder="Enter something" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" v-focus />
                 <!--<a v-bind:style="[todo.completed ? {'text-decoration': 'line-through'} : '']" v-on:click="todo.completed = !todo.completed">{{ todo.title }}</a>-->
             </div>
             <div class="remove-item" @click="removeTodo(index)">
@@ -44,6 +44,13 @@
                         editing : false
                     }
                 ]
+            }
+        },
+        directives: {
+            focus: {
+                inserted: function(el) {
+                    el.focus();
+                }
             }
         },
         methods: {
