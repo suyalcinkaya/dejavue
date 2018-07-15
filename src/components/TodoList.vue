@@ -2,159 +2,354 @@
     <div>
         <div class="input-wrapper">
             <input type="text" class="todo-input" placeholder="What needs to be done?" v-model="newTodo" @keyup.enter="addTodo" />
+            <input type="text" class="todo-input-date" placeholder="When?" v-model="date" />
             <button class="btn" @click="addTodo" :disabled="!newTodo">Add</button>
         </div>
-        <div v-for="(todo, index) in todos" :key="todo.id" class="todo-item">
-            <div class="todo-item-left">
-                <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label">{{ todo.title }}</div>
-                <input v-else type="text" class="todo-item-edit" placeholder="Enter something" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" v-focus />
-                <!--<a v-bind:style="[todo.completed ? {'text-decoration': 'line-through'} : '']" v-on:click="todo.completed = !todo.completed">{{ todo.title }}</a>-->
+        <div class="filters">
+          <a :class="{active: filter == 'all'}" @click="changeFilter('all')">All</a>
+          <a :class="{active: filter == 'completed'}" @click="changeFilter('completed')">Completed</a>
+          <a :class="{active: filter == 'uncompleted'}" @click="changeFilter('uncompleted')">Uncompleted</a>
+        </div>
+        <h3>Todos</h3>
+        <div v-if="todos.length > 0">
+            <!--<hr>-->
+            <!--<span class="tip">Pro tip: Double click to edit item.</span>-->
+            <div v-for="(todo, index) in todosFiltered" :key="todo.id" class="todo-item">
+                <div class="todo-item-left">
+                    <!--<input type="checkbox" v-model="todo.completed">-->
+                    <input type="checkbox" class="cbx" :id="todo.id" style="display: none;" v-model="todo.completed">
+                    <label :for="todo.id" class="check">
+                        <svg width="18px" height="18px" viewBox="0 0 18 18">
+                            <path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
+                            <polyline points="1 9 7 14 15 4"></polyline>
+                        </svg>
+                    </label>
+                    <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label" :class="{completed: todo.completed}">{{ todo.title }}</div>
+                    <input v-else type="text" class="todo-item-edit" placeholder="Enter something" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)" v-focus />
+                    <!--<a v-bind:style="[todo.completed ? {'text-decoration': 'line-through'} : '']" v-on:click="todo.completed = !todo.completed">{{ todo.title }}</a>-->
+                </div>
+                <div class="remove-item" @click="removeTodo(index)">
+                    <span class="todo-date">{{todo.date}}</span>
+                    &#x2715;
+                </div>
             </div>
-            <div class="remove-item" @click="removeTodo(index)">
-                &#x2715;
+            <hr>
+            <div class="extra-container">
+                <a @click="checkAll" v-if="remaining > 0">
+                  <span>Check all</span>
+                </a>
+                <a @click="uncheckAll" v-else>
+                  <span>Uncheck all</span>
+                </a>
+                <span v-if="filter == 'all'">{{todosFiltered.length}} items</span>
+                <span v-else-if="filter == 'completed'">{{todosFiltered.length}} item(s) completed</span>
+                <span v-else-if="filter == 'uncompleted'">{{remaining}} item(s) left</span>
             </div>
         </div>
+        
+        <div v-else class="todo-item-label">All done!</div>
     </div>
 </template>
 
 <script>
-    export default {
-        name: 'todo-list',
-        data() {
-            return {
-                newTodo: '',
-                idForTodo: 4,
-                todos: [
-                    {
-                        id: 1,
-                        title: 'Finish Vue.js practise',
-                        completed: false,
-                        editing : false
-                    },
-                    {
-                        id: 2,
-                        title: 'Take over world',
-                        completed: false,
-                        editing : false
-                    },
-                    {
-                        id: 3,
-                        title: 'Beat Istanbul',
-                        completed: false,
-                        editing : false
-                    }
-                ]
-            }
+export default {
+  name: "todo-list",
+  data() {
+    return {
+      newTodo: "",
+      date: "",
+      idForTodo: 6,
+      todoTitleCopy: "",
+      filter: "all",
+      todos: [
+        {
+          id: 1,
+          title: "Be awesome",
+          date: "7:00 AM",
+          completed: true,
+          editing: false
         },
-        directives: {
-            focus: {
-                inserted: function(el) {
-                    el.focus();
-                }
-            }
+        {
+          id: 2,
+          title: "Grab cup of coffee",
+          date: "9:00 AM",
+          completed: false,
+          editing: false
         },
-        methods: {
-            addTodo() {
-                if(this.newTodo !== '' || this.newTodo !== null) { // already secured it via :disabled but just in case
-                    this.todos.push({
-                        id: this.idForTodo,
-                        title: this.newTodo,
-                        completed: false,
-                        editing : false
-                    });
-
-                    this.newTodo = '';
-                    this.idForTodo++;
-                }
-            },
-            editTodo(todo) {
-                todo.editing = true;
-            },
-            doneEdit(todo) {
-                if(todo.title !== '') {
-                    todo.editing = false;
-                }
-            },
-            removeTodo(index) {
-                this.todos.splice(index, 1);
-            }
+        {
+          id: 3,
+          title: "Practise Vue.js",
+          date: "11:30 AM",
+          completed: false,
+          editing: false
+        },
+        {
+          id: 4,
+          title: "Design something",
+          date: "14:00 PM",
+          completed: false,
+          editing: false
+        },
+        {
+          id: 5,
+          title: "Meet John Doe",
+          date: "16:00 PM",
+          completed: false,
+          editing: false
         }
+      ]
+    };
+  },
+  computed: {
+    remaining() {
+      return this.todos.filter(todo => !todo.completed).length;
+    },
+    todosFiltered() {
+      if ("completed" == this.filter) {
+        return this.todos.filter(todo => todo.completed);
+      } else if ("uncompleted" == this.filter) {
+        return this.todos.filter(todo => !todo.completed);
+      } else {
+        return this.todos;
+      }
     }
+  },
+  directives: {
+    focus: {
+      inserted: function(el) {
+        el.focus();
+      }
+    }
+  },
+  methods: {
+    addTodo() {
+      if (this.newTodo !== "" && this.newTodo !== null) {
+        // already secured it via :disabled but just in case
+        this.todos.push({
+          id: this.idForTodo,
+          title: this.newTodo,
+          date: this.date,
+          completed: false,
+          editing: false
+        });
+
+        this.newTodo = "";
+        this.date = "";
+        this.idForTodo++;
+      }
+    },
+    editTodo(todo) {
+      this.todoTitleCopy = todo.title;
+      todo.editing = true;
+    },
+    doneEdit(todo) {
+      if (todo.title == "") {
+        todo.title = this.todoTitleCopy;
+      }
+      todo.editing = false;
+    },
+    cancelEdit(todo) {
+      todo.title = this.todoTitleCopy;
+      todo.editing = false;
+    },
+    removeTodo(index) {
+      this.todos.splice(index, 1);
+    },
+    checkAll() {
+      this.todos.forEach(function(todo) {
+        todo.completed = true;
+      });
+    },
+    uncheckAll() {
+      this.todos.forEach(function(todo) {
+        todo.completed = false;
+      });
+    },
+    changeFilter(filter) {
+      this.filter = filter;
+    }
+  }
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    .input-wrapper {
-        display: flex;
-        padding-bottom: 1rem;
-    }
+.input-wrapper {
+  display: flex;
+  padding-bottom: 1rem;
+}
 
-    .todo-input {
-        width: 100%;
-        font-size: 1em;
-        padding: .75rem;
-        border: 1px solid #1c1c1c;
-        background-color: #fff;
-        border-radius: 0;
-        margin: 0 1em 0 0;
-    }
+.todo-input {
+  width: 70%;
+  font-size: 1em;
+  padding: 0.75rem;
+  border: 1px solid #1c1c1c;
+  background-color: #fff;
+  border-radius: 0;
+  margin: 0 1em 0 0;
+}
 
-    .todo-item-left {
-        display: flex;
-        align-items: center;
-    }
+.todo-input-date {
+  width: 30%;
+  font-size: 1em;
+  padding: 0.75rem;
+  border: 1px solid #1c1c1c;
+  background-color: #fff;
+  border-radius: 0;
+  margin: 0 1em 0 0;
+}
 
-    .todo-item-label {
-        font-size: 1em;
-        padding: .75rem;
-        border: 1px solid #fff;
-    }
+.todo-item-left {
+  display: flex;
+  align-items: center;
+}
 
-    .todo-item-edit {
-        font-size: 1em;
-        padding: .75rem;
-        border: 1px solid #1c1c1c;
-    }
+.todo-item-label {
+  font-size: 1em;
+  padding: 0.75rem;
+  border: 1px solid #fff;
+}
 
-    button {
-        border-radius: 0;
-        margin: 0;
-        border: 0;
-        cursor: pointer;
-        font-size: 1em;
-    }
+.todo-item-edit {
+  font-size: 1em;
+  padding: 0.75rem;
+  border: 1px solid #1c1c1c;
+}
 
-    button:disabled {
-        cursor: not-allowed;
-    }
+button {
+  border-radius: 0;
+  margin: 0;
+  border: 0;
+  cursor: pointer;
+  font-size: 1em;
+}
 
-    .btn {
-        padding: .75rem 1rem;
-        color: #fff;
-        background-color: #4ada99;
-    }
+button:disabled {
+  cursor: not-allowed;
+}
 
-    .btn:not(:disabled):hover {
-        background-color: #25b373;
-    }
+.btn {
+  padding: 0.75rem 1rem;
+  color: #fff;
+  background-color: #4ada99;
+}
 
-    a {
-        cursor: pointer;
-    }
+.btn:not(:disabled):hover {
+  background-color: #25b373;
+}
 
-    .todo-item {
-        margin-bottom: 1em;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
+a {
+  color: #4ada99;
+  cursor: pointer;
+}
 
-    .remove-item {
-        cursor: pointer;
-        margin-left: 1rem;
-    }
+a.active {
+  border-bottom: 2px solid #4ada99;
+  padding-bottom: 4px;
+  cursor: pointer;
+}
 
-    .remove-item:hover {
-        color: #000;
-    }
+.todo-item,
+.extra-container {
+  /*margin-bottom: 1em;*/
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.remove-item {
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.remove-item:hover {
+  color: #000;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: #c3cdd6;
+}
+
+.todo-date {
+  margin-right: 1rem;
+  color: grey;
+}
+
+.tip {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.filters a {
+  margin-right: 1em;
+}
+
+/* Checkbox */
+.check {
+  cursor: pointer;
+  position: relative;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  -webkit-tap-highlight-color: transparent;
+  transform: translate3d(0, 0, 0);
+}
+
+/*.check:before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}*/
+
+.check svg {
+  position: relative;
+  z-index: 1;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke: #c8ccd4;
+  stroke-width: 1.5;
+  transform: translate3d(0, 0, 0);
+  transition: all 0.2s ease;
+}
+
+.check svg path {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 0;
+}
+
+.check svg polyline {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 66;
+}
+
+.check:hover:before {
+  opacity: 1;
+}
+
+.check:hover svg {
+  stroke: #4ada99;
+}
+
+.cbx:checked + .check svg {
+  stroke: #4ada99;
+}
+
+.cbx:checked + .check svg path {
+  stroke-dashoffset: 60;
+  transition: all 0.3s linear;
+}
+
+.cbx:checked + .check svg polyline {
+  stroke-dashoffset: 42;
+  transition: all 0.2s linear;
+  transition-delay: 0.15s;
+}
 </style>
