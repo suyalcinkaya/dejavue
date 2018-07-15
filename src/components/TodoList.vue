@@ -1,5 +1,5 @@
 <template v-cloak>
-    <div>
+    <div class="animated fadeIn">
         <div class="input-wrapper">
             <input type="text" class="todo-input" placeholder="What needs to be done?" v-model="newTodo" @keyup.enter="addTodo" />
             <input type="text" class="todo-input-date" placeholder="When?" v-model="date" />
@@ -14,25 +14,9 @@
         <div v-if="todos.length > 0">
             <!--<hr>-->
             <!--<span class="tip">Pro tip: Double click to edit item.</span>-->
-            <div v-for="(todo, index) in todosFiltered" :key="todo.id" class="todo-item">
-                <div class="todo-item-left">
-                    <!--<input type="checkbox" v-model="todo.completed">-->
-                    <input type="checkbox" class="cbx" :id="todo.id" style="display: none;" v-model="todo.completed">
-                    <label :for="todo.id" class="check">
-                        <svg width="18px" height="18px" viewBox="0 0 18 18">
-                            <path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
-                            <polyline points="1 9 7 14 15 4"></polyline>
-                        </svg>
-                    </label>
-                    <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label" :class="{completed: todo.completed}">{{ todo.title }}</div>
-                    <input v-else type="text" class="todo-item-edit" placeholder="Enter something" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)" v-focus />
-                    <!--<a v-bind:style="[todo.completed ? {'text-decoration': 'line-through'} : '']" v-on:click="todo.completed = !todo.completed">{{ todo.title }}</a>-->
-                </div>
-                <div class="remove-item" @click="removeTodo(index)">
-                    <span class="todo-date">{{todo.date}}</span>
-                    &#x2715;
-                </div>
-            </div>
+            <transition-group enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+              <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" @removeTodo="removeTodo" />
+            </transition-group>
             <hr>
             <div class="extra-container">
                 <a @click="checkAll" v-if="remaining > 0">
@@ -52,8 +36,12 @@
 </template>
 
 <script>
+import TodoItem from "./TodoItem";
 export default {
   name: "todo-list",
+  components: {
+    TodoItem
+  },
   data() {
     return {
       newTodo: "",
@@ -107,9 +95,11 @@ export default {
     todosFiltered() {
       if ("completed" == this.filter) {
         return this.todos.filter(todo => todo.completed);
-      } else if ("uncompleted" == this.filter) {
+      } 
+      else if ("uncompleted" == this.filter) {
         return this.todos.filter(todo => !todo.completed);
-      } else {
+      } 
+      else {
         return this.todos;
       }
     }
@@ -172,8 +162,9 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style>
+@import url(https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css);
+
 .input-wrapper {
   display: flex;
   padding-bottom: 1rem;
