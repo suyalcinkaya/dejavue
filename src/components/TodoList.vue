@@ -6,16 +6,16 @@
             <button class="btn" @click="addTodo" :disabled="!newTodo">Add</button>
         </div>
         <div class="filters">
-          <a :class="{active: filter == 'all'}" @click="changeFilter('all')">All</a>
-          <a :class="{active: filter == 'completed'}" @click="changeFilter('completed')">Completed</a>
-          <a :class="{active: filter == 'uncompleted'}" @click="changeFilter('uncompleted')">Uncompleted</a>
+          <a :class="{active: filter === 'all'}" @click="changeFilter('all')">All</a>
+          <a :class="{active: filter === 'completed'}" @click="changeFilter('completed')">Completed</a>
+          <a :class="{active: filter === 'uncompleted'}" @click="changeFilter('uncompleted')">Uncompleted</a>
         </div>
         <h3>Todos</h3>
         <div v-if="todos.length > 0">
             <!--<hr>-->
             <span class="tip">Pro tip: Double click to edit item.</span>
             <transition-group enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
-              <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" @doneEdit="doneEdit" @removeTodo="removeTodo" />
+              <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" />
             </transition-group>
             <hr>
             <div class="extra-container">
@@ -25,9 +25,9 @@
                 <a @click="uncheckAll" v-else>
                   <span>Uncheck all</span>
                 </a>
-                <span v-if="filter == 'all'">{{todosFiltered.length}} items</span>
-                <span v-else-if="filter == 'completed'">{{todosFiltered.length}} item(s) completed</span>
-                <span v-else-if="filter == 'uncompleted'">{{remaining}} item(s) left</span>
+                <span v-if="filter === 'all'">{{todosFiltered.length}} items</span>
+                <span v-else-if="filter === 'completed'">{{todosFiltered.length}} item(s) completed</span>
+                <span v-else-if="filter === 'uncompleted'">{{remaining}} item(s) left</span>
             </div>
         </div>
         
@@ -48,58 +48,25 @@ export default {
       date: "",
       idForTodo: 6,
       filter: "all",
-      todos: [
-        {
-          id: 1,
-          title: "Be awesome",
-          date: "7:00 AM",
-          completed: true,
-          editing: false
-        },
-        {
-          id: 2,
-          title: "Grab cup of coffee",
-          date: "9:00 AM",
-          completed: false,
-          editing: false
-        },
-        {
-          id: 3,
-          title: "Practise Vue.js",
-          date: "11:30 AM",
-          completed: false,
-          editing: false
-        },
-        {
-          id: 4,
-          title: "Design something",
-          date: "14:00 PM",
-          completed: false,
-          editing: false
-        },
-        {
-          id: 5,
-          title: "Meet John Doe",
-          date: "16:00 PM",
-          completed: false,
-          editing: false
-        }
-      ]
+      /*todos: this.$store.state.todos*/
     };
   },
   computed: {
+      todos() {
+          return this.$store.state.todos
+      },
     remaining() {
-      return this.todos.filter(todo => !todo.completed).length;
+      return this.$store.state.todos.filter(todo => !todo.completed).length;
     },
     todosFiltered() {
-      if ("completed" === this.filter) {
-        return this.todos.filter(todo => todo.completed);
+      if ("completed" === this.$store.state.filter) {
+        return this.$store.state.todos.filter(todo => todo.completed);
       } 
-      else if ("uncompleted" === this.filter) {
-        return this.todos.filter(todo => !todo.completed);
+      else if ("uncompleted" === this.$store.state.filter) {
+        return this.$store.state.todos.filter(todo => !todo.completed);
       } 
       else {
-        return this.todos;
+        return this.$store.state.todos;
       }
     }
   },
@@ -107,37 +74,28 @@ export default {
     addTodo() {
       if (this.newTodo !== "" && this.newTodo !== null) {
         // already secured it via :disabled but just in case
-        this.todos.push({
-          id: this.idForTodo,
-          title: this.newTodo,
-          date: this.date,
-          completed: false,
-          editing: false
-        });
+
+          this.$store.commit('addTodo', {
+              id: this.idForTodo,
+              title: this.newTodo,
+              date: this.date,
+              completed: false,
+              editing: false
+          });
 
         this.newTodo = "";
         this.date = "";
         this.idForTodo++;
       }
     },
-    doneEdit(index, todo) {
-        this.todos[index-1] = todo;
-    },
-    removeTodo(index) {
-      this.todos.splice(index, 1);
-    },
     checkAll() {
-      this.todos.forEach(function(todo) {
-        todo.completed = true;
-      });
+      this.$store.commit('checkAll');
     },
     uncheckAll() {
-      this.todos.forEach(function(todo) {
-        todo.completed = false;
-      });
+        this.$store.commit('uncheckAll');
     },
     changeFilter(filter) {
-      this.filter = filter;
+      this.$store.commit('updateFilter', filter);
     }
   }
 };

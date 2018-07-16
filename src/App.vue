@@ -7,9 +7,11 @@
 
 <script>
 import TodoList from './components/TodoList.vue';
+import {store} from './store/store.js'
 
 export default {
     name: 'app',
+    store: store,
     components: {
       TodoList
     }

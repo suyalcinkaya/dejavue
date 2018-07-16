@@ -10,7 +10,7 @@
                 </svg>
             </label>
             <div v-if="!todo.editing" @dblclick="editTodo" class="todo-item-label" :class="{completed: todo.completed}">{{ todo.title }}</div>
-            <input v-else type="text" class="todo-item-edit" placeholder="Enter something" v-model="todo.title" @blur="doneEdit" @keyup.enter="doneEdit" @keyup.esc="cancelEdit" v-focus>
+            <input v-else type="text" class="todo-item-edit" placeholder="Enter something" v-model="todo.title" @blur="doneEdit" @keyup.enter="doneEdit(index)" @keyup.esc="cancelEdit" v-focus>
         </div>
         <div>
             <span class="todo-date">{{todo.date}}</span>
@@ -49,20 +49,17 @@ export default {
       this.todoTitleCopy = this.todo.title;
       this.todo.editing = true;
     },
-    doneEdit() {
-      if (this.todo.title === "") {
-        this.todo.title = this.todoTitleCopy;
-      }
+    doneEdit(index) {
+      this.todo.title === "" ? this.todo.title = this.todoTitleCopy : this.todo.title;
       this.todo.editing = false;
-
-      this.$emit("doneEdit", [this.index, this.todo]);
+      this.$store.commit('updateTodo', this.todo);
     },
     cancelEdit() {
       this.todo.title = this.todoTitleCopy;
       this.todo.editing = false;
     },
     removeTodo(index) {
-      this.$emit("removeTodo", index);
+      this.$store.commit('removeTodo', index);
     }
   }
 };
