@@ -13,9 +13,9 @@
         <h3>Todos</h3>
         <div v-if="todos.length > 0">
             <!--<hr>-->
-            <!--<span class="tip">Pro tip: Double click to edit item.</span>-->
+            <span class="tip">Pro tip: Double click to edit item.</span>
             <transition-group enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
-              <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" @removeTodo="removeTodo" />
+              <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" @doneEdit="doneEdit" @removeTodo="removeTodo" />
             </transition-group>
             <hr>
             <div class="extra-container">
@@ -47,7 +47,6 @@ export default {
       newTodo: "",
       date: "",
       idForTodo: 6,
-      todoTitleCopy: "",
       filter: "all",
       todos: [
         {
@@ -93,21 +92,14 @@ export default {
       return this.todos.filter(todo => !todo.completed).length;
     },
     todosFiltered() {
-      if ("completed" == this.filter) {
+      if ("completed" === this.filter) {
         return this.todos.filter(todo => todo.completed);
       } 
-      else if ("uncompleted" == this.filter) {
+      else if ("uncompleted" === this.filter) {
         return this.todos.filter(todo => !todo.completed);
       } 
       else {
         return this.todos;
-      }
-    }
-  },
-  directives: {
-    focus: {
-      inserted: function(el) {
-        el.focus();
       }
     }
   },
@@ -128,19 +120,8 @@ export default {
         this.idForTodo++;
       }
     },
-    editTodo(todo) {
-      this.todoTitleCopy = todo.title;
-      todo.editing = true;
-    },
-    doneEdit(todo) {
-      if (todo.title == "") {
-        todo.title = this.todoTitleCopy;
-      }
-      todo.editing = false;
-    },
-    cancelEdit(todo) {
-      todo.title = this.todoTitleCopy;
-      todo.editing = false;
+    doneEdit(index, todo) {
+        this.todos[index-1] = todo;
     },
     removeTodo(index) {
       this.todos.splice(index, 1);
@@ -263,7 +244,6 @@ a.active {
 }
 
 .todo-date {
-  margin-right: 1rem;
   color: grey;
 }
 
